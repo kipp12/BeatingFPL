@@ -145,15 +145,22 @@ def transform(bootstrap: dict, fixtures: list, histories: dict[int, list]) -> di
 # ------------------------------------------------------------------------ load
 def load(tables: dict[str, list[tuple]]) -> None:
     con = duckdb.connect(str(DB_PATH))
-    con.execute(SCHEMA.read_text())
 
+    # Rebuild and reload in one transaction: if anything fails, the previous
+    # data is restored rather than leaving dropped or half-filled tables.
     con.execute("BEGIN TRANSACTION")
-    for table, rows in tables.items():
-        if not rows:
-            continue
-        placeholders = ", ".join("?" * len(rows[0]))
-        con.executemany(f"INSERT INTO {table} VALUES ({placeholders})", rows)
-    con.execute("COMMIT")
+    try:
+        con.execute(SCHEMA.read_text())
+        for table, rows in tables.items():
+            if not rows:
+                continue
+            placeholders = ", ".join("?" * len(rows[0]))
+            con.executemany(f"INSERT INTO {table} VALUES ({placeholders})", rows)
+        con.execute("COMMIT")
+    except Exception:
+        con.execute("ROLLBACK")
+        con.close()
+        raise
 
     print(f"\nLoaded into {DB_PATH.name}:")
     for table in tables:

@@ -36,8 +36,11 @@ Each run drops and recreates the tables, so it is safe to rerun after every game
 
 ## Querying
 
+With the [DuckDB CLI](https://duckdb.org/docs/installation/) installed (`brew install duckdb` on macOS):
+
 ```bash
-.venv/bin/python -c "import duckdb; print(duckdb.sql(open('sql/your_query.sql').read()))"
+duckdb fpl.duckdb < sql/queries/views/3_form_tracker_view.sql  # once, creates the player_form view
+duckdb fpl.duckdb < sql/queries/1_differentials.sql
 ```
 
-or open `fpl.duckdb` in the DuckDB CLI, DBeaver, or the VS Code SQLTools extension.
+or open `fpl.duckdb` in DBeaver or the VS Code SQLTools extension.

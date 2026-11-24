@@ -97,7 +97,7 @@ CREATE TABLE fixtures (
     away_score          INTEGER,
     home_difficulty     INTEGER     NOT NULL CHECK (home_difficulty BETWEEN 1 AND 5),  -- FDR for the home side
     away_difficulty     INTEGER     NOT NULL CHECK (away_difficulty BETWEEN 1 AND 5),
-    is_started          BOOLEAN     NOT NULL,
+    is_started          BOOLEAN,                                          -- NULL = postponed / unscheduled
     is_finished         BOOLEAN     NOT NULL,
     CHECK (home_team_id <> away_team_id)
 );
