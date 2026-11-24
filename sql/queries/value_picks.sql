@@ -3,7 +3,7 @@
 --who are the current best value for money based on their total
 --points and current value.
 --All players returned have played at least 300 minutes
---Defenders are the best value for money in general.  
+--Includes joints on the 10th player  
 
 WITH player_values AS (
     SELECT 

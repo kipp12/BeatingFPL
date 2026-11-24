@@ -1,3 +1,6 @@
+--Returns a rolling average of player points over the previous 5 gameweeks
+CREATE OR REPLACE VIEW player_form AS
+
 WITH player_gw AS (
     SELECT 
     pg.player_id AS player_id,
@@ -22,7 +25,5 @@ WITH player_gw AS (
 )
 SELECT *
 FROM windowed
-WHERE Name = 'Bukayo Saka'
-ORDER BY gw_id
 
 ;
