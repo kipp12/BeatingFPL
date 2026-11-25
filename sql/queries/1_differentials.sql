@@ -14,6 +14,7 @@ WHERE
 CAST(p.selected_by_percent AS DOUBLE) < 5
 AND p.minutes >= 450
 AND status = 'a'
+AND Form != 0
 
 ORDER BY CAST(p.points_per_game AS DOUBLE) DESC
 
