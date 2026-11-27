@@ -24,6 +24,8 @@ ROOT = Path(__file__).parent
 RAW_DIR = ROOT / "data" / "raw"
 DB_PATH = ROOT / "fpl.duckdb"
 SCHEMA = ROOT / "sql" / "schema.sql"
+VIEWS_DIR = ROOT / "sql" / "queries" / "views"
+EXPORT_DIR = ROOT / "exports"
 
 session = requests.Session()
 session.headers["User-Agent"] = "fpl-analytics-loader/1.0"
@@ -168,6 +170,28 @@ def load(tables: dict[str, list[tuple]]) -> None:
         print(f"  {table:<18} {n:>6,} rows")
     con.close()
 
+    # ------------------------------------------------------------- views & export
+def build_views_and_export() -> None:
+    """Create every view in sql/queries/views/, then export each view to CSV for Tableau."""
+    EXPORT_DIR.mkdir(exist_ok=True)
+    con = duckdb.connect(str(DB_PATH))
+    try:
+        for sql_file in sorted(VIEWS_DIR.glob("*.sql")):
+            con.execute(sql_file.read_text())
+            print(f"  created view from {sql_file.name}")
+
+        views = con.execute(
+            "SELECT view_name FROM duckdb_views() WHERE NOT internal ORDER BY view_name"
+        ).fetchall()
+
+        print(f"\nExported to {EXPORT_DIR.name}/:")
+        for (view_name,) in views:
+            out_path = EXPORT_DIR / f"{view_name}.csv"
+            con.execute(f"COPY (SELECT * FROM {view_name}) TO '{out_path}' (HEADER)")
+            print(f"  {view_name}.csv")
+    finally:
+        con.close()
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -175,7 +199,9 @@ def main() -> None:
     args = parser.parse_args()
 
     load(transform(*extract(use_cache=args.cached)))
-
+    print("\nBuilding views ...")
+    build_views_and_export()
 
 if __name__ == "__main__":
     main()
+
